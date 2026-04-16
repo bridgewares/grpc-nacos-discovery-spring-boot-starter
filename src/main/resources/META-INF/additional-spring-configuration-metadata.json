@@ -1,0 +1,22 @@
+{
+  "properties": [
+    {
+      "defaultValue": "true",
+      "name": "io.github.grpc.nacos.discovery.immediate.enabled",
+      "type": "java.lang.Boolean",
+      "description": "enable grpc nacos immediate or not"
+    },
+    {
+      "defaultValue": "false",
+      "name": "spring.cloud.gateway.discovery.locator.enabled",
+      "type": "java.lang.Boolean",
+      "description": "enable gateway locator or not"
+    },
+    {
+      "defaultValue": "true",
+      "name": "spring.cloud.nacos.discovery.enhanced.watch.enabled",
+      "type": "java.lang.Boolean",
+      "description": "enable discovery enhanced watch or not"
+    }
+  ]
+}
