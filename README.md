@@ -1,6 +1,7 @@
 # grpc-nacos-discovery-spring-boot-starter
 
 [![Maven Central](https://img.shields.io/maven-central/v/io.github.bridgewares/grpc-nacos-discovery-spring-boot-starter)](https://search.maven.org/search?q=g:io.github.bridgewares%20AND%20a:grpc-nacos-discovery-spring-boot-starter)
+[![GitHub](https://img.shields.io/github/stars/bridgewares/grpc-nacos-discovery-spring-boot-starter?style=social)](https://github.com/bridgewares/grpc-nacos-discovery-spring-boot-starter)
 
 ## 简介
 
@@ -75,6 +76,8 @@ spring.cloud.nacos.discovery.group=DEFAULT_GROUP
 io.github.grpc.nacos.discovery.immediate.enabled=true
 # 启用 Nacos 监听（默认启用）
 spring.cloud.nacos.discovery.enhanced.watch.enabled=true
+# 启用 Gateway 定位器 (spring cloud 默认启用)
+spring.cloud.gateway.discovery.locator.enabled=true
 ```
 
 ## 配置说明
@@ -83,6 +86,7 @@ spring.cloud.nacos.discovery.enhanced.watch.enabled=true
 |--------|--------|------|
 | `io.github.grpc.nacos.discovery.immediate.enabled` | `true` | 是否启用 gRPC Nacos 即时发现 |
 | `spring.cloud.nacos.discovery.enhanced.watch.enabled` | `true` | 是否启用增强的 Nacos 监听器 |
+| `spring.cloud.gateway.discovery.locator.enabled`      | `true` | 是否启用Gateway定位器       |
 
 ## 核心类说明
 
