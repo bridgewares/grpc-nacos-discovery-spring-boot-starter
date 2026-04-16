@@ -3,26 +3,24 @@ package io.github.grpc.nacos.discovery;
 import com.alibaba.cloud.nacos.NacosDiscoveryProperties;
 import com.alibaba.cloud.nacos.NacosServiceManager;
 import com.alibaba.cloud.nacos.discovery.GatewayLocatorHeartBeatPublisher;
+import com.alibaba.cloud.nacos.discovery.NacosWatch;
 import com.alibaba.nacos.api.naming.NamingService;
 import com.alibaba.nacos.api.naming.listener.EventListener;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.DisposableBean;
-import org.springframework.context.SmartLifecycle;
 
-import java.util.Arrays;
+import java.lang.reflect.Field;
+import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * nacos enhance
  */
-public class EnhancedNacosWatch implements SmartLifecycle, DisposableBean {
+public class EnhancedNacosWatch extends NacosWatch {
 
-    private static final Logger log = LoggerFactory.getLogger(EnhancedNacosWatch.class);
-
-    private final Map<String, EventListener> listenerMap = new ConcurrentHashMap<>(16);
+    private final static Logger logger = Logger.getLogger(EnhancedNacosWatch.class.getName());
 
     private final AtomicBoolean running = new AtomicBoolean(false);
 
@@ -32,40 +30,52 @@ public class EnhancedNacosWatch implements SmartLifecycle, DisposableBean {
 
     private final GatewayLocatorHeartBeatPublisher locatorHeartBeatPublisher;
 
+    private volatile Field cachedListenerMapField;
 
-    public EnhancedNacosWatch(NacosServiceManager nacosServiceManager,
-                              NacosDiscoveryProperties properties,
-                              GatewayLocatorHeartBeatPublisher locatorHeartBeatPublisher) {
+    public EnhancedNacosWatch(NacosServiceManager nacosServiceManager, NacosDiscoveryProperties properties, GatewayLocatorHeartBeatPublisher locatorHeartBeatPublisher) {
+
+        super(nacosServiceManager, properties);
+
         this.nacosServiceManager = nacosServiceManager;
         this.properties = properties;
         this.locatorHeartBeatPublisher = locatorHeartBeatPublisher;
     }
 
     @Override
-    public boolean isAutoStartup() {
-        return true;
-    }
-
-    @Override
-    public void stop(Runnable callback) {
-        this.stop();
-        callback.run();
-    }
-
-    @Override
     public void start() {
+        super.start();
+
         if (this.running.compareAndSet(false, true)) {
-
-            EventListener eventListener = listenerMap.computeIfAbsent(buildKey(), event -> new EnhancedEventListener(locatorHeartBeatPublisher));
-
-            NamingService namingService = nacosServiceManager.getNamingService();
             try {
-                namingService.subscribe(properties.getService(), properties.getGroup(),
-                        Arrays.asList(properties.getClusterName()), eventListener);
-            } catch (Exception e) {
-                log.error("namingService subscribe failed, properties:{}", properties, e);
-            }
+                Field listenerMapField = getListenerMapField();
+                Map<String, EventListener> listenerMap = getListenerMap(listenerMapField);
+                if (listenerMap == null) {
+                    return;
+                }
+                String key = buildKey();
+                EventListener originalListener = listenerMap.get(key);
+                if (originalListener == null || originalListener instanceof EnhancedEventListener) {
+                    return;
+                }
+                EnhancedEventListener enhancedEventListener = new EnhancedEventListener(originalListener, locatorHeartBeatPublisher);
+                boolean replaced = listenerMap.replace(key, originalListener, enhancedEventListener);
+                if (!replaced) {
+                    logger.warning("Listener was modified concurrently, enhancement skipped");
+                    return;
+                }
+                replaceListenerMap(listenerMapField, listenerMap);
 
+                NamingService namingService = nacosServiceManager.getNamingService();
+
+                namingService.subscribe(properties.getService(), properties.getGroup(),
+                        Collections.singletonList(properties.getClusterName()), enhancedEventListener);
+                namingService.unsubscribe(properties.getService(), properties.getGroup(),
+                        Collections.singletonList(properties.getClusterName()), originalListener);
+                logger.info("Successfully enhanced NacosWatch listener for key: " + key);
+
+            } catch (Exception e) {
+                logger.log(Level.SEVERE, "enhanced nacosWatch Failed", e);
+            }
         }
     }
 
@@ -73,34 +83,26 @@ public class EnhancedNacosWatch implements SmartLifecycle, DisposableBean {
         return String.join(":", properties.getService(), properties.getGroup());
     }
 
-    @Override
-    public void stop() {
-        if (this.running.compareAndSet(true, false)) {
-
-            EventListener eventListener = listenerMap.get(buildKey());
-            try {
-                NamingService namingService = nacosServiceManager.getNamingService();
-                namingService.unsubscribe(properties.getService(), properties.getGroup(),
-                        Arrays.asList(properties.getClusterName()), eventListener);
-            } catch (Exception e) {
-                log.error("namingService unsubscribe failed, properties:{}", properties,
-                        e);
+    private Field getListenerMapField() throws NoSuchFieldException {
+        if (cachedListenerMapField == null) {
+            synchronized (this) {
+                if (cachedListenerMapField == null) {
+                    Field field = NacosWatch.class.getDeclaredField("listenerMap");
+                    field.setAccessible(true);
+                    cachedListenerMapField = field;
+                }
             }
         }
+        return cachedListenerMapField;
     }
 
-    @Override
-    public boolean isRunning() {
-        return this.running.get();
+    @SuppressWarnings("unchecked")
+    private Map<String, EventListener> getListenerMap(Field field) throws IllegalArgumentException, IllegalAccessException {
+        Object obj = field.get(this);
+        return (obj instanceof ConcurrentHashMap) ? (ConcurrentHashMap<String, EventListener>) obj : null;
     }
 
-    @Override
-    public int getPhase() {
-        return 0;
-    }
-
-    @Override
-    public void destroy() {
-        this.stop();
+    private void replaceListenerMap(Field field, Map<String, EventListener> listenerMap) throws IllegalArgumentException, IllegalAccessException {
+        field.set(this, listenerMap);
     }
 }

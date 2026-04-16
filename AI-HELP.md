@@ -6,9 +6,9 @@
 
 **实现的思路：**
 
-模仿`spring-cloud-starter-alibaba-nacos-discovery`的`com.alibaba.cloud.nacos.discovery.NacosWatch`类，实现`io.github.grpc.nacos.discovery.EnhancedNacosWatch`类，
+模仿`spring-cloud-starter-alibaba-nacos-discovery`的`com.alibaba.cloud.nacos.discovery.NacosWatch`类，实现`io.github.io.github.grpc.nacos.discovery.EnhancedNacosWatch`类，
 
-基于`com.alibaba.nacos.api.naming.listener.EventListener`接口实现`io.github.grpc.nacos.discovery.EnhancedEventListener`。
+基于`com.alibaba.nacos.api.naming.listener.EventListener`接口实现`io.github.io.github.grpc.nacos.discovery.EnhancedEventListener`。
 
 ## 第一步
 nacos服务发现有grpc server注册上来后，会推送NamingEvent事件

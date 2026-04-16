@@ -7,7 +7,7 @@
       "description": "enable grpc nacos immediate or not"
     },
     {
-      "defaultValue": "false",
+      "defaultValue": "true",
       "name": "spring.cloud.gateway.discovery.locator.enabled",
       "type": "java.lang.Boolean",
       "description": "enable gateway locator or not"
