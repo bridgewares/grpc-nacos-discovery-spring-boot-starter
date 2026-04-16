@@ -1,7 +1,9 @@
 # grpc-nacos-discovery-spring-boot-starter
 
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Maven Central](https://img.shields.io/maven-central/v/io.github.bridgewares/grpc-nacos-discovery-spring-boot-starter)](https://search.maven.org/search?q=g:io.github.bridgewares%20AND%20a:grpc-nacos-discovery-spring-boot-starter)
-[![GitHub](https://img.shields.io/github/stars/bridgewares/grpc-nacos-discovery-spring-boot-starter?style=social)](https://github.com/bridgewares/grpc-nacos-discovery-spring-boot-starter)
+[![GitHub](https://img.shields.io/badge/GitHub-View%20Source-green?logo=github)](https://github.com/bridgewares/grpc-nacos-discovery-spring-boot-starter)
+
 
 ## Introduction
 
