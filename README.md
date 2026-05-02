@@ -6,6 +6,8 @@
 
 ## 简介
 
+![arch](./images/arch.png)
+
 `grpc-nacos-discovery-spring-boot-starter` 是一个基于 Spring Boot 的 Starter，用于帮助使用 Nacos 作为注册中心的服务快速发现 gRPC server 列表。该项目模仿了 `spring-cloud-starter-alibaba-nacos-discovery` 的实现原理，通过增强 Nacos 服务发现机制，实现 gRPC 服务的即时发现。
 
 ## 工作原理
